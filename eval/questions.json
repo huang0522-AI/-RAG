@@ -1,92 +1,183 @@
 {
   "meta": {
-    "description": "MVP 验收题库：每题的 must_contain 用于自动化断言（答案须包含任一关键词组），citations_should_include 用于检查引用是否落在正确文档。",
-    "scoring": "每题 1 分：答案命中全部 must_contain 关键词组记 0.7，引用命中任一正确文档记 0.3。共 12 题，总分 12 分，>= 9.6（80%）视为通过。"
+    "description": "MVP 验收题库（广东教育政策问答版）。must_contain 为关键词组，内层每组任一命中即可。",
+    "scoring": "每题 1 分：must_contain 全部组命中记 0.7，citations 命中任一正确文档记 0.3。共 12 题，总分 12 分，>= 9.6（80%）视为通过。"
   },
   "cases": [
     {
       "id": "q01",
-      "question": "A食堂早餐几点开始？",
-      "must_contain": [["07:00", "7:00", "七点"]],
-      "citations_should_include": ["02_校园生活指南", "05_校园设施与服务时间表"]
+      "question": "2023-2024学年国家励志奖学金证书怎么查询？",
+      "must_contain": [
+        [
+          "post_4644358",
+          "旧版入口"
+        ]
+      ],
+      "citations_should_include": [
+        "01_学生资助与奖学"
+      ]
     },
     {
       "id": "q02",
-      "question": "图书馆周末开放到几点？",
-      "must_contain": [["21:00", "九点", "9点"]],
-      "citations_should_include": ["04_专业课程与教学管理", "05_校园设施与服务时间表"]
+      "question": "2024-2025学年国家励志奖学金电子证书在哪里下载？",
+      "must_contain": [
+        [
+          "粤省事"
+        ],
+        [
+          "证书查询"
+        ]
+      ],
+      "citations_should_include": [
+        "01_学生资助与奖学"
+      ]
     },
     {
       "id": "q03",
-      "question": "国家奖学金一年多少钱？",
-      "must_contain": [["8000", "8,000", "八千"]],
-      "citations_should_include": ["03_奖助学金与收费"]
+      "question": "已经获得过国家奖学金的学生，第二年还能再申请吗？",
+      "must_contain": [
+        [
+          "排除性条款"
+        ]
+      ],
+      "citations_should_include": [
+        "01_学生资助与奖学"
+      ]
     },
     {
       "id": "q04",
-      "question": "生源地助学贷款最多能贷多少？",
-      "must_contain": [["16000", "16,000", "一万六"]],
-      "citations_should_include": ["03_奖助学金与收费"]
+      "question": "双相情感障碍算家庭经济困难认定里的重大疾病吗？",
+      "must_contain": [
+        [
+          "严重精神病"
+        ],
+        [
+          "粤教助函"
+        ]
+      ],
+      "citations_should_include": [
+        "06_综合问答"
+      ]
     },
     {
       "id": "q05",
-      "question": "宿舍晚上几点断电？",
-      "must_contain": [["23:00", "23点", "十一点"], ["24:00", "24点", "十二点"]],
-      "citations_should_include": ["02_校园生活指南", "05_校园设施与服务时间表"]
+      "question": "中职教师资格证和高中教师资格证是否通用？",
+      "must_contain": [
+        [
+          "相互通用"
+        ]
+      ],
+      "citations_should_include": [
+        "02_教师资格与职称"
+      ]
     },
     {
       "id": "q06",
-      "question": "校园网WiFi叫什么名字，初始密码是什么？",
-      "must_contain": [["SZIIT-WLAN"], ["身份证号后6位", "身份证后6位", "后6位"]],
-      "citations_should_include": ["02_校园生活指南"]
+      "question": "广东中小学教师资格认定对普通话等级的要求是什么？",
+      "must_contain": [
+        [
+          "二级乙等"
+        ]
+      ],
+      "citations_should_include": [
+        "02_教师资格与职称"
+      ]
     },
     {
       "id": "q07",
-      "question": "新生报到需要带哪些材料？",
-      "must_contain": [["录取通知书"], ["身份证"], ["档案"]],
-      "citations_should_include": ["01_新生入学指南"]
+      "question": "集体三等功可以用于免试专升本吗？需要什么材料？",
+      "must_contain": [
+        [
+          "立功登记表"
+        ],
+        [
+          "立功证书"
+        ]
+      ],
+      "citations_should_include": [
+        "03_招生考试与升学"
+      ]
     },
     {
       "id": "q08",
-      "question": "校医院在哪里？周末开门吗？",
-      "must_contain": [["图书馆东侧", "图书馆东"], ["09:00", "9:00", "周末"]],
-      "citations_should_include": ["02_校园生活指南", "05_校园设施与服务时间表"]
+      "question": "专升本技能竞赛国赛一等奖可以加多少分？",
+      "must_contain": [
+        [
+          "15分"
+        ]
+      ],
+      "citations_should_include": [
+        "03_招生考试与升学"
+      ]
     },
     {
       "id": "q09",
-      "question": "普通专业一年的学费是多少？",
-      "must_contain": [["5000", "5,000", "五千"]],
-      "citations_should_include": ["03_奖助学金与收费"]
+      "question": "公费师范生说的“有编有岗”是包分配吗？",
+      "must_contain": [
+        [
+          "专项招聘"
+        ],
+        [
+          "双向选择"
+        ]
+      ],
+      "citations_should_include": [
+        "02_教师资格与职称"
+      ]
     },
     {
       "id": "q10",
-      "question": "人工智能技术应用专业要学哪些课？",
-      "must_contain": [["机器学习"], ["深度学习"], ["计算机视觉"]],
-      "citations_should_include": ["04_专业课程与教学管理"]
+      "question": "缴纳社保会影响应届毕业生身份吗？",
+      "must_contain": [
+        [
+          "不相关"
+        ],
+        [
+          "学信网"
+        ]
+      ],
+      "citations_should_include": [
+        "04_就业与应届生身份"
+      ]
     },
     {
       "id": "q11",
-      "question": "转专业需要什么条件？",
-      "must_contain": [["前30%", "前 30%", "30%"], ["大一第二学期", "第二学期"]],
-      "citations_should_include": ["04_专业课程与教学管理"]
+      "question": "广东公办普通高中高三年级什么时候开学？",
+      "must_contain": [
+        [
+          "8月1日"
+        ]
+      ],
+      "citations_should_include": [
+        "05_基础教育管理"
+      ]
     },
     {
       "id": "q12",
-      "question": "军训什么时候开始，服装在哪领？",
-      "must_contain": [["9月9日", "9 月 9 日"], ["学生活动中心"]],
-      "citations_should_include": ["01_新生入学指南"]
+      "question": "工业用地可以用来办教育培训机构吗？",
+      "must_contain": [
+        [
+          "工业厂房"
+        ],
+        [
+          "严禁"
+        ]
+      ],
+      "citations_should_include": [
+        "05_基础教育管理"
+      ]
     }
   ],
   "out_of_scope": [
     {
       "id": "o01",
-      "question": "学校附近哪家火锅店最好吃？",
-      "expect": "应明确说明知识库中没有相关信息，不得编造具体店名。"
+      "question": "2027年广东省高考报名人数是多少？",
+      "expect": "知识库中没有该统计数字，应明确说明未找到，不得编造人数。"
     },
     {
       "id": "o02",
-      "question": "帮我写一段快速排序的代码。",
-      "expect": "应拒绝或说明超出校园问答范围，不得把无关内容当作校园信息回答。"
+      "question": "深圳今天天气怎么样？",
+      "expect": "超出教育政策知识库范围，应明确拒答或说明未找到。"
     }
   ]
 }
