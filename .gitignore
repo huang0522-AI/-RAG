@@ -1,0 +1,58 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE & editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+\#*\#
+
+# Build outputs
+build/
+dist/
+out/
+target/
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.class
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.secret
+*.pem
+*.key
+credentials.json
+
+# Logs
+*.log
+logs/
+
+# Dependencies
+vendor/
+
+# Local index / artifacts (rebuild via python -m scripts.ingest)
+storage/
+chroma_db/
+
+# Caches / packaging
+.pytest_cache/
+.venv/
+qwsuit-mvp.tar.gz

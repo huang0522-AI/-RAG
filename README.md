@@ -1,244 +1,168 @@
-# 校园RAG · Campus RAG MVP
+# 校园RAG · 校园问答 RAG MVP
 
-> 面向校园场景的检索增强问答：**问题 → Embedding → 混合检索 → 精排 → 生成**，每条答案标注来源，并返回可观测的链路耗时。
+面向现场演示的校园问答检索增强生成服务：一条固定链路、可观测的降级、克制的代码。
 
-一个刻意做窄的 RAG 实现。只保留一条可解释的检索链路，不做路由、不做多轮、不做 Agent 编排。目标不是功能多，而是每一跳都能被单独验证、单独替换、单独解释。
+## 启动
 
----
+```bash
+# 安装依赖
+pip install -r requirements.txt
 
-## 它解决什么
+# 配置 key（把真实值写入 .env，.env 已被 .gitignore 忽略）
+cp .env.example .env
 
-校园信息散落在招生简章、生活指南、收费文件、专业介绍等多份文档里。通用大模型对「A 食堂早餐几点开始」「国家奖学金多少钱」这类问题，要么答不知道，要么编造。
+# 建索引（首次或语料变更后执行）
+python3 -m scripts.ingest
 
-本项目把文档切块建索引，用**向量召回 + 关键词召回**双路取候选，融合后精排，最后约束大模型只依据检索结果作答，并标出来源片段。
+# 启动服务
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
----
+健康检查：
+
+```bash
+curl -s localhost:8000/health
+```
 
 ## 链路
 
 ```
 question
-  │
-  ├─[A] 向量路：Embedding → Chroma (cosine) → top 20
-  │
-  └─[B] 关键词路：jieba 分词 → BM25 → top 20
-        │
-        └─[C] RRF 融合 (k=60，两路等权) → top 20
-              │
-              └─[D] 精排 (LLM listwise / CrossEncoder / API) → top 5
-                    │
-                    └─[E] 只把 top 5 拼进 prompt → LLM 生成
-                          │
-                          └─ answer + citations + trace
+ ├─ 向量路：Embedding（api / local / hashing，当前 hashing） → Chroma cosine → top 20
+ └─ 关键词路：jieba lcut_for_search → BM25 → top 20
+        │  (两路并行)
+        ▼
+      RRF 融合(k=60，等权) → top 20
+        ▼
+      精排（local / api / llm listwise，当前 llm） → top 5
+        ▼
+      仅 5 段拼入 prompt → DeepSeek 生成
+        ▼
+      answer + citations + trace
 ```
 
-`[A]` 与 `[B]` 并行执行，耗时在 `trace` 中分开记录。
+## 为什么链路只保留这四段
 
----
+- **锚点路由**：命中哪份文档由「向量 + BM25」自然涌现，多一层路由会引入额外误判且难以解释。
+- **复合问题拆分**：演示语料单跳即可回答，拆分会把 5 步链路放大，trace 也随之难读。
+- **多轮记忆**：现场问答是单问单答，记忆会带来状态与串扰，MVP 阶段保持无状态。
+- **MCP**：本项目不调用外部工具，接入协议只会增加依赖与不确定性。
+- **答案去重**：只有 5 段证据且已经过 RRF 与精排排序，二次去重收益低，还会掩盖真实排序。
 
-## 快速开始
+## 技术选型
 
-### 1. 依赖
+| 层 | 选型 | 说明 |
+|----|------|------|
+| Web 框架 | FastAPI + uvicorn(8000) | 轻量、pydantic v2 校验、自带 OpenAPI |
+| 切块/落盘 | 自研 `chunking` + `chunks.jsonl` | 句界切块、重叠可配置，落盘可读 |
+| 向量库 | ChromaDB `PersistentClient` | 单目录持久化，cosine 距离 |
+| 关键词 | rank-bm25 + jieba `lcut_for_search` | 纯 Python，无 CPU 推理依赖 |
+| 精排 | CrossEncoder / rerank API / LLM listwise | 三档可切换 |
+| 生成 | httpx 调 DeepSeek `/chat/completions` | OpenAI 兼容，不引入 SDK |
+| 前端 | 原生 HTML/CSS/JS 单文件 | 零外链、零构建 |
+| 测试 | pytest | 只测本地逻辑，不触外部服务 |
+
+**为什么不用 LlamaIndex**：链路要可观测——每一段（向量、BM25、RRF、精排、生成）都能单独打印耗时与中间结果；同时希望依赖少、无隐藏抽象，所以用几十行自研编排替代框架。同理未引入 LangChain。
+
+## 三档后端（本项目当前真实状态）
+
+| 环节 | 可选后端 | 当前生效 | 原因 |
+|------|----------|----------|------|
+| Embedding | `api` / `local` / `hashing` | **hashing** | 本环境无 torch、无 sentence-transformers、无 embedding API key，自动降级到哈希向量（blake2b 字符 n-gram，dim=512）以保证链路完整 |
+| Rerank | `local` / `api` / `llm` / `disabled` | **llm** | `DEEPSEEK_API_KEY` 就绪，复用其做 listwise 重排，score 为名次分 `rerank_score_kind=rank` |
+| Generation | `online` / `extractive` | **online** | `DEEPSEEK_API_KEY` 就绪；失败自动重试 1 次后降级为抽取式 |
+
+`auto` 的降级顺序：embedding 无自动链（显式配置）；rerank 为 `local → api → llm → disabled`；generation 为 `online → extractive`。降级原因都会写入日志与 `/health`。
+
+## 接口示例
+
+健康检查：
 
 ```bash
-python3 -m pip install -r requirements.txt
-```
-
-### 2. 配置
-
-```bash
-cp .env.example .env
-```
-
-最少需要：
-
-```ini
-DEEPSEEK_API_KEY=sk-xxx
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-chat
-```
-
-> 注意：`DEEPSEEK_BASE_URL` 必须是 `https://api.deepseek.com`，`platform.deepseek.com` 是网页控制台，不是 API 端点。
-
-### 3. 建索引
-
-```bash
-python3 -m scripts.ingest
-```
-
-### 4. 启动
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-打开 `http://localhost:8000/`。
-
----
-
-## 接口
-
-### `GET /health`
-
-```json
-{
-  "status": "ok",
-  "embedding": {"model": "hashing-blake2b", "mode": "hashing"},
-  "rerank": {"model": "deepseek-chat", "mode": "llm"},
-  "generation": {"model": "deepseek-chat", "mode": "online"},
-  "index": {"docs": 5, "chunks": 29}
-}
-```
-
-三个 `mode` 都反映**实际生效**的后端，不是配置里的期望值。
-
-### `POST /ingest`
-
-```json
-{"rebuilt": true, "docs": 5, "chunks": 29, "elapsed_ms": 120}
-```
-
-### `POST /ask`
-
-```bash
-curl -s -X POST localhost:8000/ask \
-  -H "Content-Type: application/json" \
-  -d '{"question":"A食堂早餐几点开始？"}'
+curl -s localhost:8000/health
 ```
 
 ```json
-{
-  "answer": "A 食堂早餐开放时间为 07:00—09:00。[1]",
-  "citations": [
-    {
-      "id": 1,
-      "doc": "02_校园生活指南.txt",
-      "chunk_id": "02_校园生活指南#001",
-      "score": 1.0,
-      "score_kind": "rank",
-      "snippet": "A 食堂位于学生公寓 3 栋旁，开放时间为早餐 07:00—09:00……"
-    }
-  ],
-  "trace": {
-    "total_ms": 1285,
-    "embed_ms": 0,
-    "vector_ms": 12,
-    "bm25_ms": 1,
-    "rerank_ms": 781,
-    "gen_ms": 492,
-    "fusion": "rrf",
-    "rerank_mode": "llm",
-    "gen_mode": "online",
-    "candidates": 26,
-    "kept": 5
-  }
-}
+{"status":"ok","embedding":{"model":"hashing-blake2b","mode":"hashing"},"rerank":{"model":"deepseek-chat","mode":"llm"},"generation":{"model":"deepseek-chat","mode":"online"},"index":{"docs":5,"chunks":29}}
 ```
 
-错误码：空问题 → `400`；索引未构建 → `503`；异常 → `500`（不回传堆栈）。
-
----
-
-## 后端矩阵（本项目最重要的一处设计）
-
-三个环节都可以独立替换，且降级状态在 `/health` 与 `trace` 中可见，**不做静默降级**。
-
-| 环节 | 可选后端 | 当前默认 | 说明 |
-|---|---|---|---|
-| Embedding | `api` / `local` / `hashing` | `hashing` | 运行环境无法安装 torch，默认用确定性哈希向量保证链路完整 |
-| Rerank | `llm` / `api` / `local` / `disabled` | `llm` | 用 DeepSeek 做 listwise 重排，返回名次分而非概率 |
-| Generation | `online` / `extractive` | `online` | 无 key 或调用失败时退回抽取式回答，答案仍带引用 |
-
-### 为什么默认是 hashing
-
-`hashing` 后端是 **字符 2-gram / 3-gram + blake2b 哈希 + log1p + L2 归一化**，是确定性的，但不具备语义能力。它的作用是在没有 torch、下载模型受限的环境里，保证四段链路仍然完整可跑、可测试、可演示。
-
-要换成真实语义模型：
-
-```ini
-EMBEDDING_BACKEND=api
-EMBEDDING_API_KEY=sk-xxx
-EMBEDDING_API_BASE=https://api.siliconflow.cn/v1
-EMBEDDING_API_MODEL=BAAI/bge-m3
-```
-
-或本地安装 `sentence-transformers` 后设 `EMBEDDING_BACKEND=local`。
-
-**更换后端后必须重跑 `python3 -m scripts.ingest`**，因为向量维度会变。
-
-### 精排为什么可以用 LLM
-
-`bge-reranker` 需要 torch，本环境装不上。`llm` 后端让模型只输出一个 JSON 排序数组，不生成答案，避免把重排变成二次生成。代价是每次多一次约 0.5–1.5 秒的调用，`trace.rerank_ms` 会如实记录。
-
----
-
-## 评测
+重建索引：
 
 ```bash
-python3 -m eval.run_eval
+curl -s -X POST localhost:8000/ingest
 ```
 
-- 12 道题，覆盖 5 份文档，逐题检查关键词与引用文档；
-- 2 道越界题，只人工确认是否拒答；
-- 满分 12，通过线 9.6（80%）；
-- 结果写入 `eval/last_run.json`，可用于迭代前后对比。
+```json
+{"rebuilt":true,"docs":5,"chunks":29,"elapsed_ms":2861}
+```
 
-打分只看 HTTP 响应，不直接读索引；不修改题库、不放宽规则。
+提问：
 
----
+```bash
+curl -s -X POST localhost:8000/ask -H "Content-Type: application/json" -d '{"question":"A食堂早餐几点开始？"}'
+```
 
-## 设计取舍
+```json
+{"answer":"A食堂早餐07:00开始[1][2]。","citations":[{"id":1,"doc":"02_校园生活指南.txt","chunk_id":"02_校园生活指南#001","score":1.0,"snippet":"..."}],"trace":{"total_ms":1839,"embed_ms":0,"vector_ms":14,"bm25_ms":1,"rerank_ms":953,"gen_ms":872,"fusion":"rrf","rerank_mode":"llm","gen_mode":"online","candidates":20,"kept":5}}
+```
 
-**为什么不用 LlamaIndex**
-编排层只有四个阶段。裸写之后，每个阶段的输入输出、耗时、降级原因都能直接打印，依赖也更少。面试或答辩时，链路可以逐跳解释，而不是「框架里发生了一些事」。
+## 实测结果
 
-**为什么用 RRF 而不是加权求和**
-向量分与 BM25 分量纲不同，加权需要调参且对语料敏感。RRF 只用名次：`score = Σ 1/(k + rank)`，两路等权，k=60。不需要归一化，也不需要为每份语料重新调权重。
+四个必演示问题（本机实测，`rerank_mode=llm`、`gen_mode=online`）：
 
-**为什么保留 extractive 降级**
-现场演示最常见的失败不是逻辑错误，而是网络和密钥。`extractive` 用 token 重叠度选句，输出仍带引用编号，保证「没有模型也能给出有依据的答案」。
+| 问题 | answer | 首条引用 |
+|------|--------|----------|
+| A食堂早餐几点开始？ | A食堂早餐07:00开始[1][2]。 | 02_校园生活指南.txt |
+| 国家奖学金一年多少钱？ | 国家奖学金标准为每人每年 8000 元，一次性发放。[1] | 03_奖助学金与收费.txt |
+| 宿舍晚上几点断电？ | 学生公寓周日到周四 23:00 断电，周五、周六 24:00 断电……[1][2][3] | 02_校园生活指南.txt |
+| 学校附近哪家火锅店最好吃？ | 未找到相关信息。 | —（无资料命中） |
 
-**为什么不做多轮、不改写、不做路由**
-这些能力会显著增加链路长度和不可解释性。本项目的目标是证明「检索质量 + 来源可追溯」，不是覆盖所有 RAG 形态。边界写在 `docs/CONTRACT.md` 的禁止项里。
+各阶段平均耗时（4 题 warm 实测，ms）：
 
----
+| total | embed | vector | bm25 | rerank | gen |
+|-------|-------|--------|------|--------|-----|
+| ≈1894 | 0 | ≈12 | ≈1 | ≈1030 | ≈851 |
+
+自动评测：`eval/questions.json` 已随仓库提供（12 道断言题 + 2 道越界题），通过线 80%（9.6 / 12）。运行 `python3 -m eval.run_eval`，脚本会把总分、通过率与逐题明细写入 `eval/last_run.json`。
+
+> 本仓库**不附带未经实测的评测分数**。上表是 4 道演示题的人工记录；完整 12 题的总分请在本地跑出后填入，避免把估算值当成结果。
+
+## 已知限制
+
+1. 语料只有 5 份校园文档，覆盖面有限，问题稍偏就可能召回不到。
+2. 接口无鉴权，任何能访问端口的人都可以调用 `/ask` 与 `/ingest`。
+3. 单进程 uvicorn，没有并发控制与水平扩展，重算索引时不可用。
+4. Embedding 目前是 `hashing` 哈希向量，**没有语义能力**，语义命中弱；正确性命中主要靠 BM25 与 LLM 精排兜底。
+5. rerank 与生成依赖外部 DeepSeek，网络延迟明显（单题 rerank ≈1s、生成 ≈0.85s），且受外部服务可用性影响。
+6. 越界问题（如「附近哪家火锅店最好吃」）靠 prompt 第 3 条规则约束拒答，没有独立的拒答/相关性分类器。
+7. `embed_ms` 恒为 0：向量编码耗时并入 `vector_ms`（`vector_search` 未拆分计时）。
 
 ## 目录结构
 
 ```
-app/
-  config.py        配置与环境变量
-  schemas.py       请求 / 响应模型
-  chunking.py      文档切块
-  store.py         chunks.jsonl + Chroma
-  embedder.py      三档 embedding 后端
-  bm25_index.py    jieba + BM25
-  reranker.py      四档精排后端
-  generator.py     prompt 组装 + online / extractive
-  retriever.py     并行召回 + RRF + 精排入口
-  main.py          FastAPI 路由
-scripts/ingest.py  重建索引
-data/              5 份校园语料
-eval/              题库、评测脚本、最近一次结果
-tests/             冒烟测试
-web/index.html     单文件演示页（零外链）
-docs/CONTRACT.md   项目契约与 Changelog
+app/        config / schemas / chunking / store / embedder / bm25_index / reranker / generator / retriever / model_status / main
+scripts/    ingest（CLI 入库）
+data/       5 份校园语料（只读）
+eval/       run_eval.py + questions.json（12 题题库）+ last_run.json（运行后生成）
+tests/      pytest（不触外部服务）
+web/        index.html（单文件演示页）
+docs/       CONTRACT.md 项目契约
+storage/    chunks.jsonl + Chroma 持久化
 ```
 
----
+## 现场演示脚本（约 90 秒）
 
-## 已知限制
+```bash
+# 1) 先亮状态（约 5s）
+curl -s localhost:8000/health
 
-1. 语料只有 5 份，覆盖范围有限；
-2. 默认 `hashing` 后端没有语义能力，同义表达会漏召回；
-3. 精排走 LLM，单次请求增加 0.5–1.5 秒；
-4. 单进程内存索引，未做并发优化与多 worker；
-5. 无鉴权、无限流，仅适合内网或演示；
-6. 越界问题的拒答依赖 prompt 约束，不是硬性校验；
-7. 未做多轮对话与查询改写。
+# 2) 打开演示页提问「A食堂早餐几点开始？」（约 20s，展示 answer/来源/耗时）
+#    浏览器打开 http://localhost:8000/
 
----
+# 3) 问「国家奖学金一年多少钱？」（约 15s，展示引用 03）
 
-## License
+# 4) 问越界题「学校附近哪家火锅店最好吃？」（约 15s，展示「未找到相关信息」）
 
-MIT
+# 5) 跑自动评测看总分（约 35s）
+python3 -m eval.run_eval
+```

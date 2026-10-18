@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>校园RAG · 校园问答 · 每条答案可追溯来源</title>
+<style>
+  :root {
+    --bg: #F6F4EF;
+    --surface: #FFFFFF;
+    --ink: #1F2933;
+    --muted: #6B7280;
+    --primary: #12344D;
+    --accent: #B07A3C;
+    --line: #E4DFD4;
+    --ok: #2F7D5D;
+    --warn: #B45309;
+    --err: #B42318;
+    --font-title: Georgia, "Songti SC", "SimSun", serif;
+    --font-body: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .mono { font-family: var(--font-mono); }
+
+  /* 顶部栏 */
+  .topbar {
+    height: 72px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 28px;
+    overflow: hidden;
+  }
+  .brand { min-width: 0; }
+  .brand h1 {
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: 22px;
+    color: var(--primary);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .brand p { margin: 1px 0 0; font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .badges { margin-left: auto; display: flex; gap: 10px; flex-wrap: nowrap; }
+  .badge-status {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--bg);
+    white-space: nowrap;
+  }
+  .badge-status b { font-family: var(--font-mono); font-weight: 600; color: var(--primary); }
+  .badge-status.state-ok b { color: var(--ok); }
+  .badge-status.state-off b { color: var(--err); }
+  .indexline {
+    margin: 0;
+    padding: 8px 28px 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* 主体两栏 */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px 28px 24px;
+    align-items: start;
+  }
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; }
+    .col-right { position: static !important; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    margin: 0 0 12px;
+    font-family: var(--font-title);
+    font-size: 17px;
+    color: var(--primary);
+    letter-spacing: 0.5px;
+  }
+
+  /* 输入区 */
+  .asker { display: flex; gap: 12px; }
+  .asker input {
+    flex: 1;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    outline: none;
+  }
+  .asker input:focus { border-color: var(--primary); }
+  .asker button {
+    padding: 0 26px;
+    font-size: 16px;
+    font-family: var(--font-body);
+    color: #fff;
+    background: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .asker button:disabled { opacity: 0.55; cursor: progress; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chips button {
+    font-size: 13px;
+    color: var(--primary);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 12px;
+    cursor: pointer;
+  }
+  .chips button:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* 回答 */
+  .answer { font-size: 16px; white-space: pre-wrap; word-break: break-word; }
+  .answer .nofact {
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .cite-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1;
+    padding: 3px 6px;
+    margin: 0 2px;
+    color: #fff;
+    background: var(--accent);
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    vertical-align: 1px;
+  }
+  .cite-badge:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+  .hint { color: var(--muted); font-size: 15px; }
+
+  /* 来源 */
+  .src {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background: var(--surface);
+  }
+  .src:last-child { margin-bottom: 0; }
+  .src.flash { animation: flash 1.5s ease-out; }
+  @keyframes flash {
+    0% { background: #FBF2E4; border-color: var(--accent); }
+    100% { background: var(--surface); border-color: var(--line); }
+  }
+  .src-head { display: flex; align-items: baseline; gap: 10px; }
+  .src-idx {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #fff;
+    background: var(--primary);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+  .src-doc { font-size: 16px; color: var(--ink); font-weight: 600; }
+  .src-snippet {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  details.more { margin-top: 6px; }
+  details.more summary { font-size: 13px; color: var(--primary); cursor: pointer; }
+  details.more .full { margin-top: 6px; font-size: 14px; color: var(--ink); white-space: pre-wrap; }
+  .bar-wrap { margin-top: 10px; display: flex; align-items: center; gap: 10px; }
+  .bar {
+    flex: 1;
+    height: 8px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar > span { display: block; height: 100%; background: var(--accent); width: 0; }
+  .bar-label { font-family: var(--font-mono); font-size: 13px; color: var(--ink); white-space: nowrap; }
+
+  /* 空答案折叠 */
+  .src-collapsed {
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .src-collapsed summary { cursor: pointer; color: var(--primary); font-size: 14px; }
+  .src-collapsed ul { margin: 10px 0 0; padding-left: 20px; font-size: 14px; color: var(--muted); }
+
+  /* 右栏链路 */
+  .col-right { position: sticky; top: 88px; }
+  .chain .row { margin-bottom: 14px; }
+  .chain .row:last-of-type { margin-bottom: 12px; }
+  .chain .row-top { display: flex; justify-content: space-between; font-size: 14px; }
+  .chain .row-top .ms { font-family: var(--font-mono); color: var(--ink); }
+  .chain .bar { margin-top: 6px; }
+  .chain .bar > span { background: var(--primary); }
+  .chain .facts {
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .chain .facts div { display: flex; justify-content: space-between; }
+  .chain .facts b { font-family: var(--font-mono); color: var(--ink); font-weight: 600; }
+  .chain .src-note { margin-top: 12px; font-size: 13px; color: var(--muted); }
+
+  /* 错误条 */
+  .error {
+    display: none;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--err);
+    background: #FBEDEB;
+    border: 1px solid var(--err);
+    border-radius: 8px;
+  }
+
+  /* 页脚 */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 16px 28px;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .fade-in { animation: fadein 180ms ease-out; }
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <h1>校园RAG</h1>
+    <p>校园问答 · 每条答案可追溯来源</p>
+  </div>
+  <div class="badges">
+    <span class="badge-status" id="b-embed">Embedding: <b>未连接</b></span>
+    <span class="badge-status" id="b-rerank">精排: <b>未连接</b></span>
+    <span class="badge-status" id="b-gen">生成: <b>未连接</b></span>
+  </div>
+</div>
+<p class="indexline" id="indexline">索引：读取中…</p>
+
+<div class="layout">
+  <div class="col-left">
+    <div class="error" id="error"></div>
+
+    <div class="card">
+      <div class="asker">
+        <input id="q" type="text" placeholder="输入校园问题，例如：A食堂早餐几点开始？" autocomplete="off" />
+        <button id="send">提问</button>
+      </div>
+      <div class="chips" id="chips">
+        <button data-q="A食堂早餐几点开始">A食堂早餐几点开始</button>
+        <button data-q="国家奖学金一年多少钱">国家奖学金一年多少钱</button>
+        <button data-q="宿舍晚上几点断电">宿舍晚上几点断电</button>
+        <button data-q="校医院在哪里">校医院在哪里</button>
+      </div>
+    </div>
+
+    <div class="card" id="answer-card">
+      <h2>回答</h2>
+      <div id="answer" class="hint">尚未提问。请输入问题后点击「提问」。</div>
+    </div>
+
+    <div class="card" id="sources-card">
+      <h2>来源</h2>
+      <div id="sources" class="hint">暂无引用。</div>
+    </div>
+  </div>
+
+  <aside class="col-right">
+    <div class="card chain" id="chain">
+      <h2>检索链路</h2>
+      <div class="row" data-stage="Embedding">
+        <div class="row-top"><span>Embedding</span><span class="ms" data-ms>—</span></div>
+        <div class="bar"><span data-bar></span></div>
+      </div>
+      <div class="row" data-stage="混合检索">
+        <div class="row-top"><span>混合检索</span><span class="ms" data-ms>—</span></div>
+        <div class="bar"><span data-bar></span></div>
+      </div>
+      <div class="row" data-stage="精排">
+        <div class="row-top"><span>精排</span><span class="ms" data-ms>—</span></div>
+        <div class="bar"><span data-bar></span></div>
+      </div>
+      <div class="row" data-stage="生成">
+        <div class="row-top"><span>生成</span><span class="ms" data-ms>—</span></div>
+        <div class="bar"><span data-bar></span></div>
+      </div>
+      <div class="facts">
+        <div><span>候选数 → 保留</span><b id="f-kept">—</b></div>
+        <div><span>融合方式</span><b id="f-fusion">—</b></div>
+      </div>
+      <div class="src-note">数据来源：本次请求 /ask 的 trace</div>
+    </div>
+  </aside>
+</div>
+
+<footer>技术栈：FastAPI · Hybrid Retrieval(Vector+BM25+RRF) · Cross-Encoder/LLM Rerank · DeepSeek</footer>
+
+<script>
+  var qInput = document.getElementById('q');
+  var sendBtn = document.getElementById('send');
+  var answerEl = document.getElementById('answer');
+  var sourcesEl = document.getElementById('sources');
+  var errorEl = document.getElementById('error');
+  var indexlineEl = document.getElementById('indexline');
+  var badges = {
+    embed: document.getElementById('b-embed'),
+    rerank: document.getElementById('b-rerank'),
+    gen: document.getElementById('b-gen')
+  };
+
+  function esc(t) {
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function clamp01(v) {
+    var n = Number(v);
+    if (isNaN(n)) return 0;
+    if (n < 0) return 0;
+    if (n > 1) return 1;
+    return n;
+  }
+  function setBadge(el, name, mode) {
+    el.className = 'badge-status state-ok';
+    el.innerHTML = name + ': <b>' + esc(mode) + '</b>';
+  }
+  function setBadgeDown(el, name) {
+    el.className = 'badge-status state-off';
+    el.innerHTML = name + ': <b>未连接</b>';
+  }
+  function showError(msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
+  function clearError() { errorEl.textContent = ''; errorEl.style.display = 'none'; }
+
+  async function fetchJson(url, options, timeoutMs) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+    try {
+      var response = await fetch(url, Object.assign({ signal: controller.signal }, options || {}));
+      var body = null;
+      try { body = await response.json(); } catch (e) { body = null; }
+      return { response: response, body: body };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function loadHealth() {
+    try {
+      var res = await fetchJson('/health', {}, 10000);
+      if (!res.response.ok || !res.body) throw new Error('HTTP ' + res.response.status);
+      var h = res.body;
+      setBadge(badges.embed, 'Embedding', h.embedding.mode);
+      setBadge(badges.rerank, '精排', h.rerank.mode);
+      setBadge(badges.gen, '生成', h.generation.mode);
+      indexlineEl.textContent = '索引 ' + h.index.docs + ' 份文档 · ' + h.index.chunks + ' 个片段';
+    } catch (err) {
+      setBadgeDown(badges.embed, 'Embedding');
+      setBadgeDown(badges.rerank, '精排');
+      setBadgeDown(badges.gen, '生成');
+      indexlineEl.textContent = '索引：未连接';
+      showError('健康检查失败：' + (err.name === 'AbortError' ? '请求超时' : (err.message || '网络异常')) + '（仍可尝试提问）');
+    }
+  }
+
+  function scoreDisplay(c) {
+    var kind = c.score_kind;
+    var s = Number(c.score);
+    if (kind === 'rank') return { label: '精排名次 ' + c.id, ratio: clamp01(s) };
+    if (kind === 'probability' || kind === 'relevance') {
+      return { label: '相关性 ' + (isNaN(s) ? '—' : s.toFixed(2)), ratio: clamp01(s) };
+    }
+    return { label: 'RRF 分数 ' + (isNaN(s) ? '—' : s.toFixed(4)), ratio: clamp01(s) };
+  }
+
+  function renderAnswer(text, empty) {
+    var safe = esc(text || '（空回答）');
+    var html = safe.replace(/\[(\d+)\]/g, function (m, n) {
+      return '<a class="cite-badge" href="#cite-' + n + '" data-cite="' + n + '">' + n + '</a>';
+    });
+    if (empty) html = '<div class="nofact">知识库中没有可支撑该问题的内容</div>' + html;
+    answerEl.className = 'answer fade-in';
+    answerEl.innerHTML = html;
+    answerEl.querySelectorAll('.cite-badge').forEach(function (a) {
+      a.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        var target = document.getElementById('cite-' + a.getAttribute('data-cite'));
+        if (!target) return;
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.remove('flash');
+        void target.offsetWidth;
+        target.classList.add('flash');
+        setTimeout(function () { target.classList.remove('flash'); }, 1500);
+      });
+    });
+  }
+
+  function sourceCard(c) {
+    var doc = esc(String(c.doc).replace(/\.txt$/, ''));
+    var disp = scoreDisplay(c);
+    var pct = Math.round(disp.ratio * 100);
+    return '<div class="src" id="cite-' + c.id + '">' +
+      '<div class="src-head"><span class="src-idx">' + c.id + '</span>' +
+      '<span class="src-doc">' + doc + '</span></div>' +
+      '<div class="src-snippet">' + esc(c.snippet || '') + '</div>' +
+      '<details class="more"><summary>展开全文</summary><div class="full">' + esc(c.snippet || '') + '</div></details>' +
+      '<div class="bar-wrap"><div class="bar"><span style="width:' + pct + '%"></span></div>' +
+      '<span class="bar-label">' + esc(disp.label) + '</span></div>' +
+      '</div>';
+  }
+
+  function renderSources(citations, empty) {
+    citations = citations || [];
+    if (empty) {
+      var names = citations.map(function (c) {
+        return esc(String(c.doc).replace(/\.txt$/, '')) + ' [' + c.id + ']';
+      }).join('、');
+      sourcesEl.className = 'fade-in';
+      sourcesEl.innerHTML = '<details class="src-collapsed"><summary>检索候选 ' + citations.length +
+        ' 条（未作为回答依据）</summary><ul><li>' + (names || '—') + '</li></ul></details>';
+      return;
+    }
+    if (citations.length === 0) {
+      sourcesEl.className = 'hint';
+      sourcesEl.textContent = '（无来源）';
+      return;
+    }
+    sourcesEl.className = 'fade-in';
+    sourcesEl.innerHTML = citations.map(sourceCard).join('');
+  }
+
+  function renderChain(trace) {
+    var stages = [
+      { name: 'Embedding', ms: trace.embed_ms },
+      { name: '混合检索', ms: (Number(trace.vector_ms) || 0) + (Number(trace.bm25_ms) || 0) },
+      { name: '精排', ms: trace.rerank_ms },
+      { name: '生成', ms: trace.gen_ms }
+    ];
+    var max = 1;
+    stages.forEach(function (s) { if (typeof s.ms === 'number' && s.ms > max) max = s.ms; });
+    document.querySelectorAll('#chain .row').forEach(function (row, i) {
+      var ms = stages[i].ms;
+      var msEl = row.querySelector('[data-ms]');
+      var barEl = row.querySelector('[data-bar]');
+      if (typeof ms === 'number') {
+        msEl.textContent = ms + ' ms';
+        barEl.style.width = Math.round((ms / max) * 100) + '%';
+      } else {
+        msEl.textContent = '—';
+        barEl.style.width = '0%';
+      }
+    });
+    document.getElementById('f-kept').textContent = (trace.candidates == null ? '—' : trace.candidates) +
+      ' → ' + (trace.kept == null ? '—' : trace.kept);
+    document.getElementById('f-fusion').textContent = trace.fusion || '—';
+  }
+
+  function isEmptyAnswer(answer) {
+    return typeof answer === 'string' && (answer.indexOf('未找到') !== -1 || answer.indexOf('没有找到') !== -1);
+  }
+
+  async function ask() {
+    var question = qInput.value.trim();
+    if (!question) { showError('请输入问题后再提问。'); return; }
+    clearError();
+    sendBtn.disabled = true;
+    sendBtn.textContent = '检索中…';
+    answerEl.className = 'hint';
+    answerEl.textContent = '检索与生成中，请稍候…';
+    try {
+      var res = await fetchJson('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question })
+      }, 60000);
+      if (!res.response.ok) {
+        var detail = (res.body && res.body.detail) ? res.body.detail : res.response.statusText;
+        showError('请求失败：HTTP ' + res.response.status + ' · ' + detail);
+        answerEl.textContent = '（未获得回答）';
+        renderSources([]);
+        return;
+      }
+      var body = res.body;
+      var empty = isEmptyAnswer(body.answer);
+      renderAnswer(body.answer, empty);
+      renderSources(body.citations, empty);
+      renderChain(body.trace || {});
+    } catch (err) {
+      var reason = err.name === 'AbortError' ? '请求超过 60 秒未返回，可重试' : (err.message || '网络异常');
+      showError('请求异常：' + reason);
+      answerEl.className = 'hint';
+      answerEl.textContent = '（未获得回答）';
+      renderSources([]);
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = '提问';
+    }
+  }
+
+  sendBtn.addEventListener('click', ask);
+  qInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { ask(); } });
+  document.getElementById('chips').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-q]');
+    if (!b) return;
+    qInput.value = b.getAttribute('data-q');
+    ask();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('details[open]').forEach(function (d) { d.open = false; });
+    }
+  });
+
+  loadHealth();
+</script>
+</body>
+</html>

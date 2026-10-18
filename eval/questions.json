@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "description": "MVP 验收题库：每题的 must_contain 用于自动化断言（答案须包含任一关键词组），citations_should_include 用于检查引用是否落在正确文档。",
+    "scoring": "每题 1 分：答案命中全部 must_contain 关键词组记 0.7，引用命中任一正确文档记 0.3。共 12 题，总分 12 分，>= 9.6（80%）视为通过。"
+  },
+  "cases": [
+    {
+      "id": "q01",
+      "question": "A食堂早餐几点开始？",
+      "must_contain": [["07:00", "7:00", "七点"]],
+      "citations_should_include": ["02_校园生活指南", "05_校园设施与服务时间表"]
+    },
+    {
+      "id": "q02",
+      "question": "图书馆周末开放到几点？",
+      "must_contain": [["21:00", "九点", "9点"]],
+      "citations_should_include": ["04_专业课程与教学管理", "05_校园设施与服务时间表"]
+    },
+    {
+      "id": "q03",
+      "question": "国家奖学金一年多少钱？",
+      "must_contain": [["8000", "8,000", "八千"]],
+      "citations_should_include": ["03_奖助学金与收费"]
+    },
+    {
+      "id": "q04",
+      "question": "生源地助学贷款最多能贷多少？",
+      "must_contain": [["16000", "16,000", "一万六"]],
+      "citations_should_include": ["03_奖助学金与收费"]
+    },
+    {
+      "id": "q05",
+      "question": "宿舍晚上几点断电？",
+      "must_contain": [["23:00", "23点", "十一点"], ["24:00", "24点", "十二点"]],
+      "citations_should_include": ["02_校园生活指南", "05_校园设施与服务时间表"]
+    },
+    {
+      "id": "q06",
+      "question": "校园网WiFi叫什么名字，初始密码是什么？",
+      "must_contain": [["SZIIT-WLAN"], ["身份证号后6位", "身份证后6位", "后6位"]],
+      "citations_should_include": ["02_校园生活指南"]
+    },
+    {
+      "id": "q07",
+      "question": "新生报到需要带哪些材料？",
+      "must_contain": [["录取通知书"], ["身份证"], ["档案"]],
+      "citations_should_include": ["01_新生入学指南"]
+    },
+    {
+      "id": "q08",
+      "question": "校医院在哪里？周末开门吗？",
+      "must_contain": [["图书馆东侧", "图书馆东"], ["09:00", "9:00", "周末"]],
+      "citations_should_include": ["02_校园生活指南", "05_校园设施与服务时间表"]
+    },
+    {
+      "id": "q09",
+      "question": "普通专业一年的学费是多少？",
+      "must_contain": [["5000", "5,000", "五千"]],
+      "citations_should_include": ["03_奖助学金与收费"]
+    },
+    {
+      "id": "q10",
+      "question": "人工智能技术应用专业要学哪些课？",
+      "must_contain": [["机器学习"], ["深度学习"], ["计算机视觉"]],
+      "citations_should_include": ["04_专业课程与教学管理"]
+    },
+    {
+      "id": "q11",
+      "question": "转专业需要什么条件？",
+      "must_contain": [["前30%", "前 30%", "30%"], ["大一第二学期", "第二学期"]],
+      "citations_should_include": ["04_专业课程与教学管理"]
+    },
+    {
+      "id": "q12",
+      "question": "军训什么时候开始，服装在哪领？",
+      "must_contain": [["9月9日", "9 月 9 日"], ["学生活动中心"]],
+      "citations_should_include": ["01_新生入学指南"]
+    }
+  ],
+  "out_of_scope": [
+    {
+      "id": "o01",
+      "question": "学校附近哪家火锅店最好吃？",
+      "expect": "应明确说明知识库中没有相关信息，不得编造具体店名。"
+    },
+    {
+      "id": "o02",
+      "question": "帮我写一段快速排序的代码。",
+      "expect": "应拒绝或说明超出校园问答范围，不得把无关内容当作校园信息回答。"
+    }
+  ]
+}
