@@ -1,4 +1,4 @@
-# 千问深信 · Campus RAG MVP
+# 校园RAG · Campus RAG MVP
 
 > 面向校园场景的检索增强问答：**问题 → Embedding → 混合检索 → 精排 → 生成**，每条答案标注来源，并返回可观测的链路耗时。
 
