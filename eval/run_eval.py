@@ -26,6 +26,14 @@ def load_questions() -> list[dict]:
         sys.exit(2)
     data = json.loads(QUESTIONS_PATH.read_text(encoding="utf-8"))
     if isinstance(data, dict):
+        cases = data.get("cases")
+        if cases is not None:
+            items = [dict(case) for case in cases]
+            for extra in data.get("out_of_scope", []) or []:
+                item = dict(extra)
+                item["out_of_scope"] = True
+                items.append(item)
+            return items
         return data.get("questions", [])
     return data
 

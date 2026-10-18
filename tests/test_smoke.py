@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -28,8 +27,7 @@ def test_health_index_counts_zero_when_missing():
 
 def test_index_matches_data():
     data_files = [path for path in Path("data").glob("*.txt") if path.is_file()]
-    if len(data_files) < 5:
-        pytest.skip("data not uploaded")
+    assert len(data_files) == 6
     body = client.get("/health").json()
-    assert body["index"]["docs"] == 5
+    assert body["index"]["docs"] == 6
     assert body["index"]["chunks"] > 0

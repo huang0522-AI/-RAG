@@ -55,4 +55,8 @@ chroma_db/
 # Caches / packaging
 .pytest_cache/
 .venv/
-qwsuit-mvp.tar.gz
+*.tar.gz
+*.log
+
+# Platform metadata
+.cosmocode/

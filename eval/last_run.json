@@ -1,0 +1,413 @@
+{
+  "timestamp": "2026-10-18T09:45:43.974093+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "health": {
+    "status": "ok",
+    "embedding": {
+      "model": "hashing-blake2b",
+      "mode": "hashing"
+    },
+    "rerank": {
+      "model": "deepseek-chat",
+      "mode": "llm"
+    },
+    "generation": {
+      "model": "deepseek-chat",
+      "mode": "online"
+    },
+    "index": {
+      "docs": 6,
+      "chunks": 69
+    }
+  },
+  "total_score": 12.0,
+  "max_score": 12.0,
+  "threshold": 9.6,
+  "passed": true,
+  "scored_questions": 12,
+  "avg_stage_ms": {
+    "total_ms": 2007,
+    "embed_ms": 0,
+    "vector_ms": 160,
+    "bm25_ms": 81,
+    "rerank_ms": 766,
+    "gen_ms": 1080
+  },
+  "questions": [
+    {
+      "id": "q01",
+      "question": "2023-2024学年国家励志奖学金证书怎么查询？",
+      "out_of_scope": false,
+      "answer": "2023-2024学年国家励志奖学金电子证书可通过《广东省教育厅关于广东省2023-2024学年度高校国家励志奖学金获奖名单的通知》（https://edu.gd.gov.cn/zwgknew/gsgg/content/post_4644358.html）中的附件名单查询下载 [1]。该链接已于2025年6月12日恢复，点击\"旧版入口\"蓝字跳转个人信息输入页即可 [2]。如有疑问，请联系广东省教育厅学生助学工作管理办公室 020-37629503 [2]。",
+      "error": "",
+      "elapsed_ms": 3595,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 3591,
+        "embed_ms": 0,
+        "vector_ms": 1742,
+        "bm25_ms": 956,
+        "rerank_ms": 619,
+        "gen_ms": 1230,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 29,
+        "kept": 3
+      }
+    },
+    {
+      "id": "q02",
+      "question": "2024-2025学年国家励志奖学金电子证书在哪里下载？",
+      "out_of_scope": false,
+      "answer": "2024-2025学年国家励志奖学金电子证书可通过粤省事APP或微信小程序查询下载：登录粤省事后，依次点击“办事→主题→教育→（更多服务）证书查询→选择2025年份”，或直接在主页搜索框输入“证书查询”，选择“证书查询-教育”即可。[1]",
+      "error": "",
+      "elapsed_ms": 2388,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 2385,
+        "embed_ms": 0,
+        "vector_ms": 15,
+        "bm25_ms": 2,
+        "rerank_ms": 952,
+        "gen_ms": 1418,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 31,
+        "kept": 5
+      }
+    },
+    {
+      "id": "q03",
+      "question": "已经获得过国家奖学金的学生，第二年还能再申请吗？",
+      "out_of_scope": false,
+      "answer": "根据《本专科生国家奖学金评审办法》（教财函〔2019〕105号），申请条件中并无“曾获国奖者不得再次申请”的排除性条款[1]。因此，已获得过国家奖学金的学生第二年仍可申请，不能以曾经获奖作为限制参评的理由[1]。",
+      "error": "",
+      "elapsed_ms": 1846,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 1844,
+        "embed_ms": 0,
+        "vector_ms": 12,
+        "bm25_ms": 1,
+        "rerank_ms": 815,
+        "gen_ms": 1016,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 34,
+        "kept": 5
+      }
+    },
+    {
+      "id": "q04",
+      "question": "双相情感障碍算家庭经济困难认定里的重大疾病吗？",
+      "out_of_scope": false,
+      "answer": "根据《广东省家庭经济困难学生认定工作指标解释》（粤教助函〔2017〕52号），重大疾病一般包括严重精神病等，但资料中未明确列出“双相情感障碍”是否属于严重精神病，也未说明学校反馈是否合理。[1] 因此，双相情感障碍是否算重大疾病，未找到相关信息。",
+      "error": "",
+      "elapsed_ms": 1878,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "06_综合问答.txt",
+        "01_学生资助与奖学.txt",
+        "01_学生资助与奖学.txt",
+        "03_招生考试与升学.txt",
+        "03_招生考试与升学.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 1875,
+        "embed_ms": 0,
+        "vector_ms": 20,
+        "bm25_ms": 1,
+        "rerank_ms": 744,
+        "gen_ms": 1111,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 28,
+        "kept": 5
+      }
+    },
+    {
+      "id": "q05",
+      "question": "中职教师资格证和高中教师资格证是否通用？",
+      "out_of_scope": false,
+      "answer": "根据《教师资格条例》第五条规定，高级中学教师资格与中等职业学校教师资格相互通用。[1]",
+      "error": "",
+      "elapsed_ms": 2007,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "02_教师资格与职称.txt",
+        "02_教师资格与职称.txt",
+        "02_教师资格与职称.txt",
+        "02_教师资格与职称.txt",
+        "02_教师资格与职称.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 2005,
+        "embed_ms": 0,
+        "vector_ms": 16,
+        "bm25_ms": 1,
+        "rerank_ms": 879,
+        "gen_ms": 1109,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 30,
+        "kept": 5
+      }
+    },
+    {
+      "id": "q06",
+      "question": "广东中小学教师资格认定对普通话等级的要求是什么？",
+      "out_of_scope": false,
+      "answer": "广东省中小学教师资格认定要求普通话水平达到二级乙等及以上标准 [1][2]。具体请以认定公告要求为准 [1][2]。",
+      "error": "",
+      "elapsed_ms": 1481,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "02_教师资格与职称.txt",
+        "02_教师资格与职称.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 1479,
+        "embed_ms": 0,
+        "vector_ms": 13,
+        "bm25_ms": 2,
+        "rerank_ms": 525,
+        "gen_ms": 940,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 29,
+        "kept": 2
+      }
+    },
+    {
+      "id": "q07",
+      "question": "集体三等功可以用于免试专升本吗？需要什么材料？",
+      "out_of_scope": false,
+      "answer": "可以用于免试专升本，但须按规定上传本人的立功登记表及立功证书，否则不予受理；如无以上材料，请以普通退役大学生士兵身份报考 [1][2][3]。具体请以当年文件为准 [3]。",
+      "error": "",
+      "elapsed_ms": 2186,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "03_招生考试与升学.txt",
+        "03_招生考试与升学.txt",
+        "03_招生考试与升学.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 2183,
+        "embed_ms": 0,
+        "vector_ms": 27,
+        "bm25_ms": 8,
+        "rerank_ms": 999,
+        "gen_ms": 1157,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 30,
+        "kept": 3
+      }
+    },
+    {
+      "id": "q08",
+      "question": "专升本技能竞赛国赛一等奖可以加多少分？",
+      "out_of_scope": false,
+      "answer": "根据资料，获得全国职业院校大赛或全国职业技能大赛国赛一等奖及以上的高职（专科）学生，可在普通专升本招生文化课省统考成绩总分的基础上增加15分投档，由高校择优录取 [1]。",
+      "error": "",
+      "elapsed_ms": 1641,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "03_招生考试与升学.txt",
+        "03_招生考试与升学.txt",
+        "03_招生考试与升学.txt",
+        "03_招生考试与升学.txt",
+        "03_招生考试与升学.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 1639,
+        "embed_ms": 0,
+        "vector_ms": 13,
+        "bm25_ms": 1,
+        "rerank_ms": 762,
+        "gen_ms": 864,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 29,
+        "kept": 5
+      }
+    },
+    {
+      "id": "q09",
+      "question": "公费师范生说的“有编有岗”是包分配吗？",
+      "out_of_scope": false,
+      "answer": "不是包分配。省级教育行政部门通过统筹设置专项招聘岗位确保“有编有岗”，学生应通过规定的招聘程序报考相关岗位，通过双向选择等方式落实任教学校和岗位。[1]",
+      "error": "",
+      "elapsed_ms": 1968,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "02_教师资格与职称.txt",
+        "01_学生资助与奖学.txt",
+        "04_就业与应届生身份.txt",
+        "04_就业与应届生身份.txt",
+        "04_就业与应届生身份.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 1966,
+        "embed_ms": 0,
+        "vector_ms": 13,
+        "bm25_ms": 1,
+        "rerank_ms": 858,
+        "gen_ms": 1095,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 23,
+        "kept": 5
+      }
+    },
+    {
+      "id": "q10",
+      "question": "缴纳社保会影响应届毕业生身份吗？",
+      "out_of_scope": false,
+      "answer": "在广东省高等教育部门的毕业生就业工作中，学籍上的应届毕业生一般指当年毕业的普通高等教育毕业生，学籍信息以教育部学信网为准，与有否缴纳社保并不相关 [1][2][3][4][5]。如关注以“应届毕业生身份”参加招考，具体报考资格和政审条件由招考单位制定，建议以招考公告或咨询具体招考单位为准 [1][2][3][4][5]。",
+      "error": "",
+      "elapsed_ms": 1860,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "04_就业与应届生身份.txt",
+        "04_就业与应届生身份.txt",
+        "04_就业与应届生身份.txt",
+        "03_招生考试与升学.txt",
+        "03_招生考试与升学.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 1858,
+        "embed_ms": 0,
+        "vector_ms": 12,
+        "bm25_ms": 1,
+        "rerank_ms": 778,
+        "gen_ms": 1067,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 27,
+        "kept": 5
+      }
+    },
+    {
+      "id": "q11",
+      "question": "广东公办普通高中高三年级什么时候开学？",
+      "out_of_scope": false,
+      "answer": "根据资料，2025-2026学年第一学期高三年级开学时间为8月1日[1]；第二学期开学时间为3月2日[1]。",
+      "error": "",
+      "elapsed_ms": 1657,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "05_基础教育管理.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 1655,
+        "embed_ms": 0,
+        "vector_ms": 21,
+        "bm25_ms": 1,
+        "rerank_ms": 603,
+        "gen_ms": 1031,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 29,
+        "kept": 1
+      }
+    },
+    {
+      "id": "q12",
+      "question": "工业用地可以用来办教育培训机构吗？",
+      "out_of_scope": false,
+      "answer": "不可以。民办培训机构办学场地必须产权用途与教育业态匹配，严禁选用工业厂房、仓库、居民住宅、危房等不适宜办学场所；办学场地法定合规用途仅限商业、商务办公、教育配套用地 [1]。工业厂区环境不符合未成年人身心健康管控要求，且擅自将厂房改造为教培+食堂+宿舍属于擅自改变土地与建筑使用性质 [1]。",
+      "error": "",
+      "elapsed_ms": 1602,
+      "score": 1.0,
+      "missed_groups": [],
+      "docs": [
+        "05_基础教育管理.txt"
+      ],
+      "gen_mode": "online",
+      "trace": {
+        "total_ms": 1600,
+        "embed_ms": 0,
+        "vector_ms": 13,
+        "bm25_ms": 1,
+        "rerank_ms": 662,
+        "gen_ms": 925,
+        "fusion": "rrf",
+        "rerank_mode": "llm",
+        "gen_mode": "online",
+        "candidates": 33,
+        "kept": 1
+      }
+    },
+    {
+      "id": "o01",
+      "question": "2027年广东省高考报名人数是多少？",
+      "out_of_scope": true,
+      "answer": "未找到相关信息。",
+      "error": "",
+      "elapsed_ms": 1327,
+      "score": null
+    },
+    {
+      "id": "o02",
+      "question": "深圳今天天气怎么样？",
+      "out_of_scope": true,
+      "answer": "未找到相关信息",
+      "error": "",
+      "elapsed_ms": 1889,
+      "score": null
+    }
+  ]
+}

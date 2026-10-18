@@ -1,4 +1,48 @@
-from app.chunking import build_chunks, load_documents, split_text
+from app.chunking import build_chunks, load_documents, split_qa, split_text
+
+QA_SAMPLE = (
+    "【问题】国家励志奖学金证书怎么下载？\n"
+    "【答复】请通过省教育厅公示名单中的链接，点击“旧版入口”查询个人信息。\n\n"
+    "【问题】教资认定普通话要几级？\n"
+    "【答复】一般学科需二级乙等，语文学科需二级甲等。"
+)
+
+
+def test_split_qa_keeps_both_markers():
+    chunks = split_qa(QA_SAMPLE, max_len=800)
+    assert len(chunks) == 2
+    for chunk in chunks:
+        assert "【问题】" in chunk
+        assert "【答复】" in chunk
+
+
+def test_split_qa_does_not_merge_units():
+    chunks = split_qa(QA_SAMPLE, max_len=800)
+    assert all(chunk.count("【问题】") == 1 for chunk in chunks)
+    assert all(chunk.count("【答复】") == 1 for chunk in chunks)
+
+
+def test_split_qa_splits_long_unit_and_repeats_question():
+    long_answer = "这是相关政策答复内容。" * 80
+    text = "【问题】超长的政策问题示例？\n【答复】" + long_answer
+    chunks = split_qa(text, max_len=300)
+    assert len(chunks) >= 2
+    for chunk in chunks:
+        assert "【问题】" in chunk
+        assert "【答复】" in chunk
+        assert "超长的政策问题示例" in chunk
+
+
+def test_build_chunks_qa_path(tmp_path):
+    doc = tmp_path / "01_学生资助与奖学.txt"
+    doc.write_text(QA_SAMPLE, encoding="utf-8")
+    chunks = build_chunks(tmp_path)
+    assert len(chunks) == 2
+    assert all(
+        "【问题】" in chunk["text"] and "【答复】" in chunk["text"] for chunk in chunks
+    )
+    assert chunks[0]["title"] == "学生资助与奖学"
+
 
 SAMPLE = (
     "新生入学请携带录取通知书与身份证。请在开学前完成线上报到流程。"

@@ -90,6 +90,9 @@ class Settings:
     chunk_overlap: int = field(
         default_factory=lambda: _to_int(os.getenv("CHUNK_OVERLAP"), 80)
     )
+    qa_max_chunk: int = field(
+        default_factory=lambda: _to_int(os.getenv("QA_MAX_CHUNK"), 800)
+    )
     top_k_vector: int = field(
         default_factory=lambda: _to_int(os.getenv("TOP_K_VECTOR"), 20)
     )
